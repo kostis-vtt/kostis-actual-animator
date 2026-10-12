@@ -210,7 +210,7 @@ What this means in practice:
 
 ## Support
 
-Found a bug or have an idea? Open an issue on [GitHub](https://github.com/kostis-vtt/kostis-actual-animator/issues).
+Found a bug? [Report it](https://github.com/kostis-vtt/kostis-actual-animator/issues/new/choose). For questions, ideas, or to show what you made with it, head to [Discussions](https://github.com/kostis-vtt/kostis-actual-animator/discussions).
 
 These modules are free. If you enjoy them, you can support their development on [Ko-fi](https://ko-fi.com/xgpro).
 
