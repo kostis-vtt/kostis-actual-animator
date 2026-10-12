@@ -1,0 +1,128 @@
+<div class="kaa-facing" data-scope="{{prefix}}">
+  <div class="kaa-mode-grid">
+    {{#each modes}}
+    <label class="kaa-mode {{#if active}}active{{/if}}" data-tooltip="{{hint}}">
+      <input type="radio" name="{{../prefix}}.mode" value="{{key}}" {{checked active}}>
+      <i class="{{icon}}" inert></i>
+      <span>{{label}}</span>
+    </label>
+    {{/each}}
+  </div>
+  <p class="kaa-hint">{{hint}}</p>
+
+  {{#if isTarget}}
+  <div class="kaa-target">
+    <div class="kaa-grid">
+      <label>Look at the
+        <select name="{{prefix}}.target.rule" data-dtype="String">
+          {{#each target.rules}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </label>
+      <label>among
+        <select name="{{prefix}}.target.group" data-dtype="String">
+          {{#each target.groups}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </label>
+      <label data-tooltip="Only consider tokens within this many squares. 0 = no limit.">Within (squares, 0 = any) <input type="number" name="{{prefix}}.target.range" min="0" step="0.5" value="{{target.range}}" data-dtype="Number"></label>
+    </div>
+    {{#if target.isCustom}}
+    <div class="kaa-field-row">
+      <span class="kaa-label">Group</span>
+      <span class="kaa-code">{{target.customLabel}}</span>
+      <button type="button" class="kaa-btn" data-action="pick" data-pick="targetGroup" data-scope="{{prefix}}"><i class="fa-solid fa-hand-pointer" inert></i> Click tokens to add / remove</button>
+    </div>
+    {{/if}}
+    {{#if target.usesHealth}}<p class="kaa-hint"><i class="fa-solid fa-heart-pulse" inert></i> Wounds are read from each token's first resource bar (hit points in most systems).</p>{{/if}}
+    <p class="kaa-hint">Hidden tokens and the animation's own symmetry copies are never targeted.</p>
+  </div>
+  {{/if}}
+
+  {{#if usesArt}}
+  <div class="kaa-field-row">
+    <span class="kaa-label">Token art faces</span>
+    <div class="kaa-seg">
+      {{#each arts}}
+      <label class="kaa-seg-btn {{#if active}}active{{/if}}" data-tooltip="{{label}}">
+        <input type="radio" name="{{../prefix}}.art" value="{{key}}" {{checked active}}>
+        <i class="fa-solid {{icon}}" inert></i>
+      </label>
+      {{/each}}
+    </div>
+    <label class="kaa-check"><input type="checkbox" name="{{prefix}}.reverse" {{checked reverse}}> Face the opposite way</label>
+  </div>
+  {{/if}}
+
+  {{#if isPath}}
+  <div class="kaa-range">
+    <label data-tooltip="Look-ahead distance in pixels. 0 = exact tangent (instant turns at sharp corners); higher values round off corners smoothly.">Turn smoothing</label>
+    <input type="range" name="{{prefix}}.smoothing" min="0" max="400" step="1" value="{{smoothing}}" data-dtype="Number" data-suffix=" px">
+    <span class="kaa-range-value">{{smoothing}} px</span>
+  </div>
+  {{/if}}
+
+  {{#if usesTurnRate}}
+  <div class="kaa-range">
+    <label data-tooltip="Maximum turning speed. 0 = turn instantly. Lower values make heads swing smoothly towards new targets.">Max turn speed</label>
+    <input type="range" name="{{prefix}}.turnRate" min="0" max="720" step="10" value="{{turnRate}}" data-dtype="Number" data-suffix=" °/s">
+    <span class="kaa-range-value">{{turnRate}} °/s</span>
+  </div>
+  {{/if}}
+
+  {{#if isSpin}}
+  <div class="kaa-range">
+    <label>Spin speed</label>
+    <input type="range" name="{{prefix}}.spinSpeed" min="-1080" max="1080" step="5" value="{{spinSpeed}}" data-dtype="Number" data-suffix=" °/s">
+    <span class="kaa-range-value">{{spinSpeed}} °/s</span>
+  </div>
+  <p class="kaa-hint">Negative values spin counter-clockwise.</p>
+  {{/if}}
+
+  {{#if isFixed}}
+  <div class="kaa-range">
+    <label>Angle</label>
+    <input type="range" name="{{prefix}}.angle" min="0" max="359" step="1" value="{{angle}}" data-dtype="Number" data-suffix="°">
+    <span class="kaa-range-value">{{angle}}°</span>
+  </div>
+  {{/if}}
+
+  {{#if isPoint}}
+  <div class="kaa-field-row">
+    <span class="kaa-label">Target point</span>
+    <code class="kaa-code">{{pointLabel}}</code>
+    <button type="button" class="kaa-btn" data-action="pick" data-pick="facePoint" data-scope="{{prefix}}"><i class="fa-solid fa-crosshairs" inert></i> Pick on map</button>
+  </div>
+  {{/if}}
+
+  {{#if isToken}}
+  <div class="kaa-field-row">
+    <span class="kaa-label">Target token</span>
+    <select name="{{prefix}}.tokenId" data-dtype="String">
+      <option value="">— choose —</option>
+      {{#each tokenOptions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+    </select>
+    <button type="button" class="kaa-btn" data-action="pick" data-pick="faceToken" data-scope="{{prefix}}"><i class="fa-solid fa-crosshairs" inert></i> Pick on map</button>
+  </div>
+  {{/if}}
+
+  {{#unless (eq mode "keep")}}
+  <div class="kaa-range">
+    <label data-tooltip="Added to the computed rotation">Angle offset</label>
+    <input type="range" name="{{prefix}}.offset" min="-180" max="180" step="1" value="{{offset}}" data-dtype="Number" data-suffix="°">
+    <span class="kaa-range-value">{{offset}}°</span>
+  </div>
+  {{/unless}}
+
+  <details class="kaa-details" {{#if swayAmp}}open{{/if}}>
+    <summary><i class="fa-solid fa-wave-square" inert></i> Sway (adds a gentle side-to-side wobble)</summary>
+    <div class="kaa-range">
+      <label>Amplitude</label>
+      <input type="range" name="{{prefix}}.swayAmp" min="0" max="90" step="1" value="{{swayAmp}}" data-dtype="Number" data-suffix="°">
+      <span class="kaa-range-value">{{swayAmp}}°</span>
+    </div>
+    <div class="kaa-range">
+      <label>Frequency</label>
+      <input type="range" name="{{prefix}}.swayFreq" min="0.05" max="5" step="0.05" value="{{swayFreq}}" data-dtype="Number" data-suffix=" Hz">
+      <span class="kaa-range-value">{{swayFreq}} Hz</span>
+    </div>
+  </details>
+</div>

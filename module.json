@@ -1,0 +1,49 @@
+{
+  "id": "kostis-actual-animator",
+  "title": "Kostis's Actual Animator",
+  "description": "Draw precise motion paths (curves with per-node curvature, circles, ellipses, rectangles, polygons, stars, spirals, waves, figure-eights, freehand, waypoints) and make tokens travel them exactly — sub-pixel accurate, grid-free, at the speed you choose, with loops, ping-pong, easing, staggering, formations and full facing control.",
+  "version": "1.5.0",
+  "authors": [
+    {
+      "name": "Kostis",
+      "url": "https://github.com/kostis-vtt"
+    }
+  ],
+  "url": "https://github.com/kostis-vtt/kostis-actual-animator",
+  "manifest": "https://github.com/kostis-vtt/kostis-actual-animator/releases/latest/download/module.json",
+  "download": "https://github.com/kostis-vtt/kostis-actual-animator/releases/download/v1.5.0/module.zip",
+  "bugs": "https://github.com/kostis-vtt/kostis-actual-animator/issues",
+  "readme": "https://github.com/kostis-vtt/kostis-actual-animator/blob/main/README.md",
+  "changelog": "https://github.com/kostis-vtt/kostis-actual-animator/blob/main/CHANGELOG.md",
+  "license": "MIT",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/kaa.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "recommends": [
+      {
+        "id": "kostis-flying-paths",
+        "type": "module",
+        "reason": "Adds the Kostis's Flying Paths launcher and the family's other modules (particle effects, auto-patrol).",
+        "compatibility": {
+          "minimum": "1.2.0"
+        },
+        "manifest": "https://github.com/kostis-vtt/kostis-flying-paths/releases/latest/download/module.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+<footer class="kaa-transport">
+  {{#if transport.hasAnim}}
+  <div class="kaa-transport-main">
+    <button type="button" class="kaa-btn kaa-play" data-action="play" data-tooltip="Play on the assigned tokens ({{transport.assigned}}), or on the selected tokens if none are assigned">
+      <i class="fa-solid fa-play" inert></i> Play
+    </button>
+    <button type="button" class="kaa-btn" data-action="playSelected" {{#unless transport.selected}}disabled{{/unless}} data-tooltip="Play on the selected tokens only">
+      <i class="fa-solid fa-arrow-pointer" inert></i> Selected ({{transport.selected}})
+    </button>
+    <button type="button" class="kaa-btn" data-action="pause" {{#unless transport.playing}}disabled{{/unless}}>
+      {{#if transport.allPaused}}<i class="fa-solid fa-play" inert></i> Resume{{else}}<i class="fa-solid fa-pause" inert></i> Pause{{/if}}
+    </button>
+    <div class="kaa-split">
+      <button type="button" class="kaa-btn" data-action="stop" data-mode="here" {{#unless transport.playing}}disabled{{/unless}} data-tooltip="Stop where they are"><i class="fa-solid fa-stop" inert></i> Stop</button>
+      <button type="button" class="kaa-btn" data-action="stop" data-mode="origin" {{#unless transport.playing}}disabled{{/unless}} data-tooltip="Stop and send them back to where they started" aria-label="Stop and return"><i class="fa-solid fa-rotate-left" inert></i></button>
+      <button type="button" class="kaa-btn" data-action="stop" data-mode="end" {{#unless transport.playing}}disabled{{/unless}} data-tooltip="Stop and jump to the end of the run" aria-label="Stop at end"><i class="fa-solid fa-forward-step" inert></i></button>
+    </div>
+    <button type="button" class="kaa-btn" data-action="restart" data-tooltip="Restart from the beginning" aria-label="Restart"><i class="fa-solid fa-backward-fast" inert></i></button>
+  </div>
+  <div class="kaa-range kaa-rate">
+    <label data-tooltip="Live speed multiplier. Running tokens change speed instantly, without jumping.">Rate</label>
+    <input type="range" name="rate" min="0.1" max="4" step="0.05" value="{{transport.rate}}" data-dtype="Number" data-suffix="×">
+    <span class="kaa-range-value">{{transport.rate}}×</span>
+  </div>
+  <button type="button" class="kaa-btn kaa-ghost-btn {{#if transport.ghost}}active{{/if}}" data-action="ghost" data-tooltip="Preview: a ghost runs the animation on the map without moving any token">
+    <i class="fa-solid fa-ghost" inert></i> Preview
+  </button>
+  <span class="kaa-transport-status {{#if transport.playing}}live{{/if}}">
+    {{#if transport.playing}}<i class="fa-solid fa-circle kaa-pulse" inert></i> {{transport.playing}} moving{{else}}idle{{/if}}
+  </span>
+  {{else}}
+  <span class="kaa-muted">Select or create an animation to play it.</span>
+  {{/if}}
+</footer>

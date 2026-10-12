@@ -1,0 +1,59 @@
+{
+  "KAA": {
+    "Warn": {
+      "NoPermission": "You don't have permission to edit animations on this scene.",
+      "NoAnimation": "Animation not found on this scene.",
+      "NoTokens": "No tokens to animate. Assign tokens to the animation, or select some on the map.",
+      "NoSteps": "This animation has no enabled steps yet. Draw a path first.",
+      "CannotControl": "You can't move these tokens: {names}",
+      "GMOnly": "Only a Gamemaster can open the animator panel.",
+      "SelectTokens": "Select one or more tokens on the map first.",
+      "NoCopies": "Symmetry copies need permission to create tokens; playing without copies.",
+      "NeedsTarget": "This animation flies to targets: target one or more tokens (T) first.",
+      "NotAllowed": "You aren't allowed to play this animation (the GM chooses who can, in its Tokens tab)."
+    },
+    "Info": {
+      "MinNodes": "A path needs at least two nodes (three for a closed loop).",
+      "PathClosed": "Path closed into a loop.",
+      "DrawNow": "Now draw the path on the map. Click to place nodes, drag to pull curves, then click the first node to close it or press Enter to finish.",
+      "SavedToLibrary": "Template \"{name}\" saved. Find it under My templates in the template gallery.",
+      "Converted": "Converted into an editable curve. Drag its nodes and handles freely.",
+      "TemplateApplied": "\"{name}\" applied to {count} token(s).",
+      "TemplateUpdated": "Template \"{name}\" updated."
+    },
+    "Pick": {
+      "Tokens": "Click tokens on the map to assign or unassign them. Press Esc when done.",
+      "FacePoint": "Click the point on the map tokens should face.",
+      "FaceToken": "Click the token to face.",
+      "TargetGroup": "Click tokens to add or remove them from the target group. Press Esc when done.",
+      "SymPoint": "Click the point the symmetry copies should turn around.",
+      "AnchorToken": "Click the token this animation should follow.",
+      "HomingToken": "Click the token this homing leg should fly to."
+    },
+    "Settings": {
+      "InterruptOnMove": {
+        "Name": "Manual movement interrupts animation",
+        "Hint": "If a playing token is dragged or moved by hand, its animation stops and it moves normally from where it visibly is."
+      },
+      "PlayersCanPlay": {
+        "Name": "Players can play animations",
+        "Hint": "Lets players use the Token HUD to play, pause and stop the animations assigned to tokens they own."
+      },
+      "StartLead": {
+        "Name": "Start sync delay (ms)",
+        "Hint": "Playback starts this many milliseconds in the future so every connected client begins on the exact same frame. Raise it on slow connections."
+      },
+      "ShowRunning": {
+        "Name": "Show running paths on the map",
+        "Hint": "GM only: keep the paths of playing animations visible even when the animator tools are not active."
+      }
+    },
+    "Keys": {
+      "OpenPanel": "Open the animator panel",
+      "FinishPath": "Finish the path being drawn",
+      "PauseAll": "Pause / resume all animations on the scene",
+      "StopAll": "Stop all animations on the scene",
+      "OpenTemplates": "Open the template gallery"
+    }
+  }
+}

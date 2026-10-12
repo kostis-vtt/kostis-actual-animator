@@ -1,0 +1,69 @@
+<aside class="kaa-sidebar">
+  <div class="kaa-sidebar-head">
+    <div class="kaa-search">
+      <i class="fa-solid fa-magnifying-glass" inert></i>
+      <input type="search" name="search" value="{{search}}" placeholder="Search animations…" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="kaa-sidebar-actions">
+      <button type="button" class="kaa-btn kaa-primary" data-action="newAnim" {{#unless canEdit}}disabled{{/unless}}>
+        <i class="fa-solid fa-plus" inert></i> New animation
+      </button>
+      <button type="button" class="kaa-icon-btn" data-action="openTemplates" data-tooltip="Templates — ready-made animations and your own" aria-label="Templates">
+        <i class="fa-solid fa-shapes" inert></i>
+      </button>
+      <button type="button" class="kaa-icon-btn" data-action="importAnim" data-tooltip="Import from JSON" aria-label="Import">
+        <i class="fa-solid fa-file-import" inert></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="kaa-list">
+    {{#if empty}}
+    <div class="kaa-empty">
+      <i class="fa-solid fa-route" inert></i>
+      <p>No animations on this scene yet.</p>
+      <p class="kaa-muted">Create one, then draw its path on the map.</p>
+    </div>
+    {{/if}}
+    {{#each groups}}
+    <section class="kaa-group {{#if collapsed}}collapsed{{/if}}">
+      {{#if named}}
+      <header class="kaa-group-head" data-action="toggleFolder" data-folder="{{name}}">
+        <i class="fa-solid {{#if collapsed}}fa-folder{{else}}fa-folder-open{{/if}}" inert></i>
+        <span>{{label}}</span>
+        <span class="kaa-count">{{count}}</span>
+      </header>
+      {{/if}}
+      {{#unless collapsed}}
+      {{#each rows}}
+      <div class="kaa-anim-row {{#if selected}}selected{{/if}} {{#if playing}}is-playing{{/if}} {{#if paused}}is-paused{{/if}}"
+           data-action="selectAnim" data-anim-id="{{id}}" data-search="{{search}}" {{#if hidden}}hidden{{/if}}>
+        <span class="kaa-swatch" style="--c: {{color}}"></span>
+        <div class="kaa-anim-meta">
+          <div class="kaa-anim-name">{{name}}</div>
+          <div class="kaa-anim-sub">
+            {{sub}}
+            {{#if playing}}<span class="kaa-live">{{#if paused}}<i class="fa-solid fa-pause" inert></i> paused{{else}}<i class="fa-solid fa-circle" inert></i> {{playing}} moving{{/if}}</span>{{/if}}
+          </div>
+        </div>
+        <div class="kaa-row-actions">
+          {{#if playing}}
+          <button type="button" class="kaa-icon-btn" data-action="quickStop" data-tooltip="Stop" aria-label="Stop"><i class="fa-solid fa-stop" inert></i></button>
+          {{/if}}
+          <button type="button" class="kaa-icon-btn kaa-go" data-action="quickPlay" data-tooltip="Play" aria-label="Play"><i class="fa-solid fa-play" inert></i></button>
+        </div>
+      </div>
+      {{/each}}
+      {{/unless}}
+    </section>
+    {{/each}}
+  </div>
+
+  {{#if scenePlaying}}
+  <footer class="kaa-sidebar-foot">
+    <span><i class="fa-solid fa-circle kaa-pulse" inert></i> {{scenePlaying}} moving</span>
+    <button type="button" class="kaa-icon-btn" data-action="pauseAll" data-tooltip="Pause everything on this scene" aria-label="Pause all"><i class="fa-solid fa-pause" inert></i></button>
+    <button type="button" class="kaa-icon-btn kaa-danger" data-action="stopAll" data-tooltip="Stop everything on this scene" aria-label="Stop all"><i class="fa-solid fa-stop" inert></i></button>
+  </footer>
+  {{/if}}
+</aside>

@@ -1,0 +1,588 @@
+<section class="kaa-editor">
+{{#unless scene}}
+  <div class="kaa-welcome"><i class="fa-solid fa-map" inert></i><h2>No scene is being viewed</h2><p>Open a scene to create and run animations.</p></div>
+{{else}}
+{{#unless anim}}
+  <div class="kaa-welcome">
+    <i class="fa-solid fa-route" inert></i>
+    <h2>Kostis's Actual Animator</h2>
+    <p>Draw exact paths and send tokens along them, smooth and at whatever speed you choose.</p>
+    <ol class="kaa-steps-guide">
+      <li><strong>New animation</strong> (left), or pick one from the list.</li>
+      <li><strong>Draw</strong> its path on the map: curves, lines, circles, squares, stars, spirals, waves, waypoints. Each shape becomes a step.</li>
+      <li><strong>Tune</strong> speed, looping, easing and facing.</li>
+      <li><strong>Assign tokens</strong> and press <i class="fa-solid fa-play" inert></i> Play.</li>
+    </ol>
+    {{#if canEdit}}<button type="button" class="kaa-btn kaa-primary kaa-big" data-action="newAnim"><i class="fa-solid fa-plus" inert></i> Create an animation</button>{{/if}}
+  </div>
+{{else}}
+
+  {{!-- Header --}}
+  <header class="kaa-anim-head">
+    <span class="kaa-swatch kaa-swatch-lg" style="--c: {{anim.color}}"></span>
+    <input type="text" class="kaa-name" name="anim.name" value="{{anim.name}}" data-dtype="String" placeholder="Animation name" spellcheck="false">
+    <input type="text" class="kaa-folder" name="anim.folder" value="{{anim.folder}}" data-dtype="String" placeholder="Folder" spellcheck="false" data-tooltip="Group animations into folders">
+    <div class="kaa-head-actions">
+      <button type="button" class="kaa-icon-btn" data-action="undo" {{#unless anim.canUndo}}disabled{{/unless}} data-tooltip="Undo last change (Ctrl+Z on the map)" aria-label="Undo"><i class="fa-solid fa-rotate-left" inert></i></button>
+      <button type="button" class="kaa-icon-btn" data-action="locate" data-tooltip="Show on map" aria-label="Locate"><i class="fa-solid fa-location-crosshairs" inert></i></button>
+      <button type="button" class="kaa-icon-btn" data-action="moveHere" data-tooltip="Move the whole animation to the centre of the view" aria-label="Move here"><i class="fa-solid fa-arrows-to-dot" inert></i></button>
+      <button type="button" class="kaa-icon-btn" data-action="duplicate" data-tooltip="Duplicate" aria-label="Duplicate"><i class="fa-solid fa-clone" inert></i></button>
+      <button type="button" class="kaa-icon-btn" data-action="saveTemplate" data-tooltip="Save as a template (reuse on any scene, apply to any token)" aria-label="Save as template"><i class="fa-solid fa-book-bookmark" inert></i></button>
+      <button type="button" class="kaa-icon-btn" data-action="exportAnim" data-tooltip="Export JSON" aria-label="Export"><i class="fa-solid fa-file-export" inert></i></button>
+      <button type="button" class="kaa-icon-btn kaa-danger" data-action="deleteAnim" data-tooltip="Delete animation" aria-label="Delete"><i class="fa-solid fa-trash" inert></i></button>
+    </div>
+  </header>
+  <div class="kaa-colors">
+    {{#each anim.palette}}<button type="button" class="kaa-color {{#if active}}active{{/if}}" style="--c: {{color}}" data-action="color" data-color="{{color}}" aria-label="Colour {{color}}"></button>{{/each}}
+    {{#if anim.stats}}
+    <div class="kaa-stats">
+      <span data-tooltip="Total path length"><i class="fa-solid fa-ruler" inert></i> {{anim.stats.length}}</span>
+      <span data-tooltip="One cycle at the current speed"><i class="fa-solid fa-stopwatch" inert></i> {{anim.stats.cycle}}</span>
+      <span data-tooltip="Whole run"><i class="fa-solid fa-hourglass-half" inert></i> {{anim.stats.total}}</span>
+    </div>
+    {{/if}}
+  </div>
+
+  {{#if anim.template}}
+  <div class="kaa-template-bar">
+    <i class="fa-solid fa-book-bookmark" inert></i>
+    <span>Editing template <strong>{{anim.template.name}}</strong>. Changes here stay on this scene until you save them.</span>
+    <button type="button" class="kaa-btn kaa-small kaa-primary" data-action="updateTemplate"><i class="fa-solid fa-floppy-disk" inert></i> Save to template</button>
+    <button type="button" class="kaa-btn kaa-small" data-action="unlinkTemplate" data-tooltip="Stop linking this animation to the template">Unlink</button>
+  </div>
+  {{/if}}
+
+  <nav class="kaa-tabs">
+    {{#each tabs}}
+    <button type="button" class="kaa-tab {{#if active}}active{{/if}}" data-action="switchTab" data-tab="{{id}}" data-tooltip="{{label}}"><i class="{{icon}}" inert></i> <span class="kaa-tab-label">{{label}}</span></button>
+    {{/each}}
+  </nav>
+
+  <div class="kaa-tab-body">
+
+  {{!-- ============================ PATH ============================ --}}
+  {{#if (eq tab "path")}}
+    <div class="kaa-toolbar">
+      {{#each tools}}
+      <button type="button" class="kaa-tool {{#if active}}active{{/if}}" data-action="tool" data-tool="{{name}}" data-tooltip="{{title}}" aria-label="{{title}}"><i class="{{icon}}" inert></i></button>
+      {{/each}}
+      <span class="kaa-tool-divider"></span>
+      <button type="button" class="kaa-tool" data-action="addHoming" data-to="target" data-tooltip="Homing leg: fly to a targeted token, following it if it moves" aria-label="Homing leg"><i class="fa-solid fa-crosshairs" inert></i></button>
+      <button type="button" class="kaa-tool" data-action="addHoming" data-to="home" data-tooltip="Return home: fly back to where it started" aria-label="Return home"><i class="fa-solid fa-house-flag" inert></i></button>
+      <span class="kaa-sep"></span>
+      <label class="kaa-check" data-tooltip="Snap new points to the grid (Ctrl inverts while drawing)"><input type="checkbox" name="opts.snap" data-dtype="Boolean" {{checked opts.snap}}> Grid snap</label>
+    </div>
+
+    <details class="kaa-details kaa-tool-opts">
+      <summary><i class="fa-solid fa-sliders" inert></i> Drawing options</summary>
+      <div class="kaa-grid">
+        <div class="kaa-range">
+          <label data-tooltip="Curvature given to new pen nodes. 0 = straight lines; you can still pull curve handles by dragging while you click.">Pen curvature</label>
+          <input type="range" name="opts.penSmooth" min="0" max="100" value="{{opts.penSmooth}}" data-dtype="Percent" data-suffix="%">
+          <span class="kaa-range-value">{{opts.penSmooth}}%</span>
+        </div>
+        <label>Polygon sides <input type="number" name="opts.polygonSides" min="3" max="48" step="1" value="{{opts.polygonSides}}" data-dtype="Number"></label>
+        <label>Star depth % <input type="number" name="opts.polygonStar" min="0" max="95" step="1" value="{{opts.polygonStar}}" data-dtype="Percent"></label>
+        <label>Spiral turns <input type="number" name="opts.spiralTurns" min="0.25" max="50" step="0.25" value="{{opts.spiralTurns}}" data-dtype="Number"></label>
+        <label>Spiral inner % <input type="number" name="opts.spiralInner" min="0" max="95" step="1" value="{{opts.spiralInner}}" data-dtype="Percent"></label>
+        <label>Wave form
+          <select name="opts.waveForm" data-dtype="String">
+            <option value="sine" {{#if (eq opts.waveForm "sine")}}selected{{/if}}>Smooth sine</option>
+            <option value="zigzag" {{#if (eq opts.waveForm "zigzag")}}selected{{/if}}>Sharp zig-zag</option>
+          </select>
+        </label>
+        <label>Wave height (squares) <input type="number" name="opts.waveAmplitude" step="0.1" value="{{opts.waveAmplitude}}" data-dtype="Number"></label>
+        <label>Wave length (squares) <input type="number" name="opts.waveLength" min="0.1" step="0.1" value="{{opts.waveLength}}" data-dtype="Number"></label>
+        <label>Waypoint wait (s) <input type="number" name="opts.pointWait" min="0" step="0.1" value="{{opts.pointWait}}" data-dtype="Seconds"></label>
+      </div>
+    </details>
+
+    {{#if (and anim.relative anim.hasSteps anim.anchorToken)}}
+    <div class="kaa-relative-bar">
+      <i class="fa-solid fa-user" inert></i>
+      <span>Relative animation: each token runs this shape from where it stands. Faint outlines on the map show where.</span>
+      <button type="button" class="kaa-btn kaa-small" data-action="anchorToToken" data-tooltip="Move the drawn path so it starts at {{anim.anchorToken}}"><i class="fa-solid fa-location-arrow" inert></i> Move path to {{anim.anchorToken}}</button>
+    </div>
+    {{/if}}
+
+    {{#if anim.hasSteps}}
+    <div class="kaa-transform">
+      <span class="kaa-label"><i class="fa-solid fa-up-down-left-right" inert></i> Transform {{anim.transformTarget}}</span>
+      <div class="kaa-seg">
+        <button type="button" class="kaa-seg-btn" data-action="transform" data-op="rotL" data-tooltip="Rotate 15° counter-clockwise"><i class="fa-solid fa-rotate-left" inert></i> 15°</button>
+        <button type="button" class="kaa-seg-btn" data-action="transform" data-op="rotR" data-tooltip="Rotate 15° clockwise"><i class="fa-solid fa-rotate-right" inert></i> 15°</button>
+        <button type="button" class="kaa-seg-btn" data-action="transform" data-op="rot90" data-tooltip="Rotate 90° clockwise">90°</button>
+      </div>
+      <div class="kaa-seg">
+        <button type="button" class="kaa-seg-btn" data-action="transform" data-op="shrink" data-tooltip="Shrink by 10%"><i class="fa-solid fa-compress" inert></i> −10%</button>
+        <button type="button" class="kaa-seg-btn" data-action="transform" data-op="grow" data-tooltip="Grow by 10%"><i class="fa-solid fa-expand" inert></i> +10%</button>
+      </div>
+    </div>
+    {{/if}}
+
+    <div class="kaa-steps">
+      {{#unless anim.hasSteps}}
+      <div class="kaa-empty-steps">
+        <i class="fa-solid fa-pen-nib" inert></i>
+        <p>Pick a drawing tool above and draw on the map. Every shape becomes a <strong>step</strong>; tokens travel the steps in order and are linked between them automatically.</p>
+      </div>
+      {{/unless}}
+      {{#each anim.steps}}
+      <div class="kaa-step {{#if selected}}selected{{/if}} {{#unless enabled}}off{{/unless}}" data-action="selectStep" data-step-id="{{id}}">
+        <span class="kaa-step-num">{{num}}</span>
+        <i class="{{icon}} kaa-step-icon" inert></i>
+        <div class="kaa-step-main">
+          <div class="kaa-step-title">{{label}}</div>
+          <div class="kaa-step-sub">
+            {{length}}{{#if closed}} · loop ×{{laps}}{{/if}}{{#if reverse}} · reversed{{/if}}{{#if wait}} · waits {{wait}}s{{/if}}{{#if teleport}} · <i class="fa-solid fa-bolt" inert></i> teleports in{{/if}}{{#if hasFacing}} · <i class="fa-solid fa-compass" inert></i>{{/if}}
+          </div>
+        </div>
+        <div class="kaa-step-actions">
+          <button type="button" class="kaa-icon-btn" data-action="stepUp" {{#if first}}disabled{{/if}} data-tooltip="Move up" aria-label="Move up"><i class="fa-solid fa-chevron-up" inert></i></button>
+          <button type="button" class="kaa-icon-btn" data-action="stepDown" {{#if last}}disabled{{/if}} data-tooltip="Move down" aria-label="Move down"><i class="fa-solid fa-chevron-down" inert></i></button>
+          <button type="button" class="kaa-icon-btn" data-action="toggleStep" data-tooltip="{{#if enabled}}Disable{{else}}Enable{{/if}} step" aria-label="Toggle"><i class="fa-solid {{#if enabled}}fa-eye{{else}}fa-eye-slash{{/if}}" inert></i></button>
+          <button type="button" class="kaa-icon-btn" data-action="duplicateStep" data-tooltip="Duplicate step" aria-label="Duplicate"><i class="fa-solid fa-clone" inert></i></button>
+          <button type="button" class="kaa-icon-btn kaa-danger" data-action="deleteStep" data-tooltip="Delete step" aria-label="Delete"><i class="fa-solid fa-xmark" inert></i></button>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+
+    {{#if anim.step}}
+    <div class="kaa-inspector">
+      <header class="kaa-inspector-head">
+        <i class="{{anim.step.icon}}" inert></i>
+        <strong>Step {{anim.step.num}}</strong> <span class="kaa-muted">{{anim.step.typeLabel}} · {{anim.step.length}}</span>
+        {{#if anim.step.canConvert}}
+        <button type="button" class="kaa-btn kaa-small" data-action="convertStep" data-tooltip="Turn this shape into nodes you can reshape freely"><i class="fa-solid fa-bezier-curve" inert></i> Make editable curve</button>
+        {{/if}}
+      </header>
+
+      <div class="kaa-grid">
+        <label>Label <input type="text" name="step.label" value="{{anim.step.label}}" placeholder="{{anim.step.typeLabel}}" data-dtype="String"></label>
+        {{#unless anim.step.isPoint}}
+        <label data-tooltip="{{anim.step.lapsHint}}">{{anim.step.lapsLabel}} <input type="number" name="step.laps" min="0.01" step="{{#if anim.step.closed}}0.25{{else}}1{{/if}}" value="{{anim.step.laps}}" data-dtype="Number"></label>
+        <label data-tooltip="Multiplies the animation speed for this step only">Speed × <input type="number" name="step.speedMul" min="0.01" step="0.1" value="{{anim.step.speedMul}}" data-dtype="Number"></label>
+        {{/unless}}
+        <label data-tooltip="Pause here after finishing this step">Wait after (s) <input type="number" name="step.wait" min="0" step="0.1" value="{{anim.step.wait}}" data-dtype="Seconds"></label>
+        {{#unless anim.step.first}}
+        <label data-tooltip="How the token gets from the previous step to the start of this one">Arrive by
+          <select name="step.connector" data-dtype="String">
+            <option value="travel" {{#if (eq anim.step.connector "travel")}}selected{{/if}}>Travelling</option>
+            <option value="teleport" {{#if (eq anim.step.connector "teleport")}}selected{{/if}}>Teleporting</option>
+          </select>
+        </label>
+        {{/unless}}
+        {{#unless (or anim.step.isPoint anim.step.isHoming)}}
+        <label class="kaa-check"><input type="checkbox" name="step.reverse" data-dtype="Boolean" {{checked anim.step.reverse}}> Reverse direction</label>
+        {{/unless}}
+      </div>
+      {{#if anim.step.closed}}
+      <div class="kaa-range">
+        <label data-tooltip="Where on the loop the token starts. You can also drag the green start marker on the map.">Start point</label>
+        <input type="range" name="step.startOffset" min="0" max="99.9" step="0.1" value="{{anim.step.startOffset}}" data-dtype="Percent" data-suffix="%">
+        <span class="kaa-range-value">{{anim.step.startOffset}}%</span>
+      </div>
+      {{/if}}
+
+      <h4 class="kaa-subhead">{{#if anim.step.isHoming}}Homing{{else}}Geometry{{/if}}</h4>
+      {{#if anim.step.isHoming}}<p class="kaa-hint"><i class="fa-solid fa-crosshairs" inert></i> Aimed when you press Play at the tokens you have targeted (T), and re-aimed every frame if they move. Symmetry copies spread across your targets and curve to alternating sides.</p>{{/if}}
+      <div class="kaa-grid">
+        {{#each anim.step.fields}}
+          {{#if isCheckbox}}
+          <label class="kaa-check" {{#if hint}}data-tooltip="{{hint}}"{{/if}}><input type="checkbox" name="{{name}}" data-dtype="Boolean" {{checked checked}}> {{label}}</label>
+          {{else if isSelect}}
+          <label>{{label}}
+            <select name="{{name}}" data-dtype="String">{{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+          </label>
+          {{else}}
+          <label {{#if hint}}data-tooltip="{{hint}}"{{/if}}>{{label}} <input type="number" name="{{name}}" value="{{value}}" step="{{step}}" data-dtype="{{dtype}}"></label>
+          {{/if}}
+        {{/each}}
+      </div>
+      {{#if anim.step.homingToken}}
+      <button type="button" class="kaa-btn kaa-small" data-action="pick" data-pick="homingToken"><i class="fa-solid fa-crosshairs" inert></i> Pick the token on the map</button>
+      {{/if}}
+
+      <h4 class="kaa-subhead">Height &amp; bounce</h4>
+      <div class="kaa-lift-modes">
+        {{#each anim.step.lift.modes}}
+        <label class="kaa-mode kaa-mode-sm {{#if active}}active{{/if}}" data-tooltip="{{hint}}">
+          <input type="radio" name="lift.mode" value="{{key}}" {{checked active}}>
+          <i class="{{icon}}" inert></i><span>{{label}}</span>
+        </label>
+        {{/each}}
+      </div>
+      {{#if anim.step.lift.on}}
+      <p class="kaa-hint">{{anim.step.lift.hint}}</p>
+      <div class="kaa-grid">
+        <label data-tooltip="Peak height in grid squares">Height (squares) <input type="number" name="lift.height" min="0" step="0.1" value="{{anim.step.lift.height}}" data-dtype="Number"></label>
+        {{#if anim.step.lift.showCount}}<label>{{#if (eq anim.step.lift.mode "hops")}}Hops{{else}}Bounces{{/if}} <input type="number" name="lift.count" min="1" max="50" step="1" value="{{anim.step.lift.count}}" data-dtype="Number"></label>{{/if}}
+        {{#if anim.step.lift.showFreq}}<label>Bobs per second <input type="number" name="lift.freq" min="0.05" step="0.05" value="{{anim.step.lift.freq}}" data-dtype="Number"></label>{{/if}}
+      </div>
+      {{#if anim.step.lift.showDecay}}
+      <div class="kaa-range">
+        <label data-tooltip="How high each bounce is compared to the one before">Each bounce keeps</label>
+        <input type="range" name="lift.decay" min="5" max="95" step="1" value="{{anim.step.lift.decay}}" data-dtype="Percent" data-suffix="%">
+        <span class="kaa-range-value">{{anim.step.lift.decay}}%</span>
+      </div>
+      {{/if}}
+      {{#if anim.step.lift.needsWait}}
+      <div class="kaa-warning"><i class="fa-solid fa-hourglass-half" inert></i> A waypoint bounces during its wait. Give this step a <strong>Wait after</strong> time (e.g. 2 s).</div>
+      {{/if}}
+      {{/if}}
+
+      {{#if anim.step.isPath}}
+      <div class="kaa-node-bar">
+        <span><i class="fa-solid fa-circle-nodes" inert></i> {{anim.step.nodeCount}} nodes</span>
+        <button type="button" class="kaa-btn kaa-small" data-action="allNodes" data-preset="corner"><i class="fa-regular fa-square" inert></i> All sharp</button>
+        <button type="button" class="kaa-btn kaa-small" data-action="allNodes" data-preset="smooth"><i class="fa-regular fa-circle" inert></i> All smooth</button>
+        <button type="button" class="kaa-icon-btn" data-action="nodeStep" data-delta="-1" data-tooltip="Previous node" aria-label="Previous node"><i class="fa-solid fa-chevron-left" inert></i></button>
+        <button type="button" class="kaa-icon-btn" data-action="nodeStep" data-delta="1" data-tooltip="Next node" aria-label="Next node"><i class="fa-solid fa-chevron-right" inert></i></button>
+      </div>
+      {{#if anim.step.node}}
+      <div class="kaa-node">
+        <div class="kaa-node-title">Node {{anim.step.node.num}}</div>
+        <div class="kaa-seg kaa-seg-wide">
+          <button type="button" class="kaa-seg-btn {{#if anim.step.node.corner}}active{{/if}}" data-action="nodePreset" data-preset="corner"><i class="fa-regular fa-square" inert></i> Sharp</button>
+          <button type="button" class="kaa-seg-btn {{#if (and (not anim.step.node.corner) (not anim.step.node.manual))}}active{{/if}}" data-action="nodePreset" data-preset="smooth"><i class="fa-regular fa-circle" inert></i> Smooth</button>
+          <button type="button" class="kaa-seg-btn {{#if anim.step.node.manual}}active{{/if}}" data-action="nodePreset" data-preset="manual"><i class="fa-solid fa-bezier-curve" inert></i> Free handles</button>
+        </div>
+        <div class="kaa-range">
+          <label data-tooltip="How rounded the path is as it passes through this node">Curvature</label>
+          <input type="range" name="node.smooth" min="0" max="100" step="1" value="{{anim.step.node.smooth}}" data-dtype="Percent" data-suffix="%">
+          <span class="kaa-range-value">{{anim.step.node.smooth}}%</span>
+        </div>
+        <div class="kaa-grid">
+          <label>X <input type="number" name="node.x" value="{{anim.step.node.x}}" step="any" data-dtype="Number"></label>
+          <label>Y <input type="number" name="node.y" value="{{anim.step.node.y}}" step="any" data-dtype="Number"></label>
+        </div>
+      </div>
+      {{else if anim.step.segment}}
+      <div class="kaa-node">
+        <div class="kaa-node-title">Segment {{anim.step.segment.num}} → {{anim.step.segment.nextNum}}</div>
+        <div class="kaa-range">
+          <label data-tooltip="Bow this segment into an arc. ±100% ≈ a half circle. You can also drag the ◆ handle on the map.">Bend</label>
+          <input type="range" name="segment.bend" min="-200" max="200" step="1" value="{{anim.step.segment.bend}}" data-dtype="Percent" data-suffix="%">
+          <span class="kaa-range-value">{{anim.step.segment.bend}}%</span>
+        </div>
+      </div>
+      {{else}}
+      <p class="kaa-hint"><i class="fa-solid fa-circle-info" inert></i> Click a node on the map to set its curvature. Drag a ◆ to bend that segment, drag the round knobs to shape the curve (Alt breaks the mirror), double-click the line to add a node, double-click a node to toggle sharp/smooth, right-click a node to remove it. Drag an end node onto the other end to close the loop.</p>
+      {{/if}}
+      {{/if}}
+
+      <div class="kaa-node-bar">
+        <span><i class="fa-solid fa-compass" inert></i> Facing</span>
+        {{#if anim.step.facing}}
+        <span class="kaa-muted">This step has its own facing (Facing tab).</span>
+        <button type="button" class="kaa-btn kaa-small" data-action="stepFacing">Use animation facing</button>
+        {{else}}
+        <span class="kaa-muted">Uses the animation's facing.</span>
+        <button type="button" class="kaa-btn kaa-small" data-action="stepFacing">Give this step its own</button>
+        {{/if}}
+      </div>
+    </div>
+    {{/if}}
+  {{/if}}
+
+  {{!-- ============================ MOTION ============================ --}}
+  {{#if (eq tab "motion")}}
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-gauge-high" inert></i> Speed</h3>
+      <div class="kaa-field-row">
+        <input type="number" class="kaa-speed" name="motion.speed" min="0.01" step="0.1" value="{{anim.motion.speed}}" data-dtype="Number">
+        <select name="motion.speedUnit" data-dtype="String">
+          {{#each anim.motion.units}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+      </div>
+      <div class="kaa-chips">
+        <span class="kaa-muted">Squares/s:</span>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="0.5">0.5</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="1">1</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="2">2</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="4">4</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="6">6</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="10">10</button>
+        <button type="button" class="kaa-chip" data-action="speedPreset" data-speed="20">20</button>
+      </div>
+      <p class="kaa-hint">Movement is exact and constant along curves. Per-step speed multipliers live in each step's settings; the <strong>Rate</strong> slider at the bottom changes running tokens live without a jump.</p>
+    </div>
+
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-chart-line" inert></i> Easing</h3>
+      <div class="kaa-chips">
+        {{#each anim.motion.easePresets}}<button type="button" class="kaa-chip {{#if active}}active{{/if}}" data-action="easePreset" data-preset="{{key}}">{{label}}</button>{{/each}}
+      </div>
+      <div class="kaa-grid">
+        <label data-tooltip="Time to reach full speed after every stop">Ease in (s) <input type="number" name="motion.easeIn" min="0" step="0.05" value="{{anim.motion.easeIn}}" data-dtype="Seconds"></label>
+        <label data-tooltip="Time to slow down before every stop">Ease out (s) <input type="number" name="motion.easeOut" min="0" step="0.05" value="{{anim.motion.easeOut}}" data-dtype="Seconds"></label>
+      </div>
+      <p class="kaa-hint">Ramps apply at the start, at waypoint waits and teleports, and at the end. Between them the speed is exact.</p>
+    </div>
+
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-repeat" inert></i> Looping</h3>
+      <div class="kaa-seg kaa-seg-wide">
+        <label class="kaa-seg-btn {{#if anim.motion.loopNone}}active{{/if}}"><input type="radio" name="motion.loop" value="none" {{checked anim.motion.loopNone}}><i class="fa-solid fa-arrow-right-long" inert></i> Once</label>
+        <label class="kaa-seg-btn {{#if anim.motion.loopLoop}}active{{/if}}"><input type="radio" name="motion.loop" value="loop" {{checked anim.motion.loopLoop}}><i class="fa-solid fa-repeat" inert></i> Loop</label>
+        <label class="kaa-seg-btn {{#if anim.motion.loopPing}}active{{/if}}"><input type="radio" name="motion.loop" value="pingpong" {{checked anim.motion.loopPing}}><i class="fa-solid fa-right-left" inert></i> Back &amp; forth</label>
+      </div>
+      {{#unless anim.motion.loopNone}}
+      <div class="kaa-grid">
+        <label data-tooltip="0 = forever">Cycles (0 = ∞) <input type="number" name="motion.loopCount" min="0" step="1" value="{{anim.motion.loopCount}}" data-dtype="Number"></label>
+        <label data-tooltip="Pause between cycles">Pause between (s) <input type="number" name="motion.loopGap" min="0" step="0.1" value="{{anim.motion.loopGap}}" data-dtype="Seconds"></label>
+        {{#if anim.motion.loopLoop}}
+        <label data-tooltip="How to get from the end back to the start, when they are not already joined">Return to start by
+          <select name="motion.loopConnector" data-dtype="String">
+            <option value="travel" {{#if (eq anim.motion.loopConnector "travel")}}selected{{/if}}>Travelling</option>
+            <option value="teleport" {{#if (eq anim.motion.loopConnector "teleport")}}selected{{/if}}>Teleporting</option>
+          </select>
+        </label>
+        {{/if}}
+      </div>
+      {{/unless}}
+    </div>
+
+    <div class="kaa-card {{#unless anim.height.used}}kaa-card-dim{{/unless}}">
+      <h3><i class="fa-solid fa-basketball" inert></i> Height effects</h3>
+      {{#unless anim.height.used}}<p class="kaa-hint">No step uses height yet. Set <em>Height &amp; bounce</em> on a step in the Path tab (arcs, hops, drop &amp; bounce, skipping, hovering).</p>{{/unless}}
+      <div class="kaa-range">
+        <label data-tooltip="How much bigger the token looks per square of height">Grow per square</label>
+        <input type="range" name="height.scale" min="0" max="100" step="1" value="{{anim.height.scale}}" data-dtype="Percent" data-suffix="%">
+        <span class="kaa-range-value">{{anim.height.scale}}%</span>
+      </div>
+      <div class="kaa-range">
+        <label data-tooltip="How far up the screen the token is drawn per square of height (its shadow stays on the ground)">Lift on screen</label>
+        <input type="range" name="height.rise" min="0" max="100" step="1" value="{{anim.height.rise}}" data-dtype="Percent" data-suffix="%">
+        <span class="kaa-range-value">{{anim.height.rise}}%</span>
+      </div>
+      <div class="kaa-chips">
+        <label class="kaa-check"><input type="checkbox" name="height.shadow" data-dtype="Boolean" {{checked anim.height.shadow}}> Shadow on the ground</label>
+        <label class="kaa-check"><input type="checkbox" name="height.elevation" data-dtype="Boolean" {{checked anim.height.elevation}}> Show height as elevation</label>
+      </div>
+    </div>
+
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-flag-checkered" inert></i> Start &amp; finish</h3>
+      <div class="kaa-option-list">
+        <label class="kaa-option {{#if anim.motion.absolute}}active{{/if}}">
+          <input type="radio" name="motion.anchor" value="absolute" {{checked anim.motion.absolute}}>
+          <div><strong>On the drawn path</strong><span>Tokens run the path exactly where it is drawn.</span></div>
+        </label>
+        <label class="kaa-option {{#if anim.motion.relative}}active{{/if}}">
+          <input type="radio" name="motion.anchor" value="relative" {{checked anim.motion.relative}}>
+          <div><strong>Relative to each token</strong><span>The path's shape moves with the token, so it starts wherever the token stands. Great for formations and reusable moves.</span></div>
+        </label>
+        <label class="kaa-option {{#if anim.motion.follow}}active{{/if}}">
+          <input type="radio" name="motion.anchor" value="token" {{checked anim.motion.follow}}>
+          <div><strong>Follow a token</strong><span>The path is attached to another token and moves with it — orbs orbiting a walking wizard, a bodyguard circling its ward.</span></div>
+        </label>
+      </div>
+      {{#if anim.motion.follow}}
+      <div class="kaa-field-row">
+        <span class="kaa-label">Follow</span>
+        <select name="motion.anchorToken" data-dtype="String">
+          {{#each anim.motion.anchorChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+        <button type="button" class="kaa-btn" data-action="pick" data-pick="anchorToken"><i class="fa-solid fa-crosshairs" inert></i> Pick on map</button>
+      </div>
+      {{/if}}
+      <div class="kaa-grid">
+        {{#if anim.motion.absolute}}
+        <label data-tooltip="How a token reaches the start of the path">Get to the start by
+          <select name="motion.approach" data-dtype="String">
+            <option value="travel" {{#if (eq anim.motion.approach "travel")}}selected{{/if}}>Travelling</option>
+            <option value="teleport" {{#if (eq anim.motion.approach "teleport")}}selected{{/if}}>Teleporting</option>
+          </select>
+        </label>
+        {{/if}}
+        {{#unless anim.motion.infinite}}
+        <label data-tooltip="What happens when the run is over">When finished
+          <select name="motion.finish" data-dtype="String">
+            <option value="stay" {{#if (eq anim.motion.finish "stay")}}selected{{/if}}>Stay at the end</option>
+            <option value="return" {{#if (eq anim.motion.finish "return")}}selected{{/if}}>Travel back to the origin</option>
+            <option value="teleport" {{#if (eq anim.motion.finish "teleport")}}selected{{/if}}>Teleport back to the origin</option>
+          </select>
+        </label>
+        {{/unless}}
+      </div>
+    </div>
+
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-people-line" inert></i> Several tokens</h3>
+      <div class="kaa-seg kaa-seg-wide">
+        <label class="kaa-seg-btn {{#if (eq anim.stagger.mode "none")}}active{{/if}}"><input type="radio" name="stagger.mode" value="none" {{checked (eq anim.stagger.mode "none")}}> Together</label>
+        <label class="kaa-seg-btn {{#if (eq anim.stagger.mode "delay")}}active{{/if}}"><input type="radio" name="stagger.mode" value="delay" {{checked (eq anim.stagger.mode "delay")}}> One after another</label>
+        <label class="kaa-seg-btn {{#if (eq anim.stagger.mode "spread")}}active{{/if}}"><input type="radio" name="stagger.mode" value="spread" {{checked (eq anim.stagger.mode "spread")}}> Spread evenly</label>
+      </div>
+      {{#if (eq anim.stagger.mode "delay")}}
+      <div class="kaa-grid"><label>Delay between tokens (s) <input type="number" name="stagger.delay" min="0" step="0.1" value="{{anim.stagger.delay}}" data-dtype="Seconds"></label></div>
+      {{/if}}
+      <p class="kaa-hint">"Spread evenly" places endlessly looping tokens at equal gaps around the loop (a patrol, an orbiting ring of wisps). For runs that end, it staggers their starts across the run.</p>
+    </div>
+  {{/if}}
+
+  {{!-- ============================ FACING ============================ --}}
+  {{#if (eq tab "facing")}}
+    {{#if anim.lockWarn}}
+    <div class="kaa-warning"><i class="fa-solid fa-triangle-exclamation" inert></i> Some assigned tokens have <em>Lock Rotation</em> enabled in their token settings, so they won't visibly turn.</div>
+    {{/if}}
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-compass" inert></i> Animation facing</h3>
+      {{> "kaa-facing" anim.facing}}
+    </div>
+    {{#if anim.step}}
+    <div class="kaa-card">
+      <h3><i class="{{anim.step.icon}}" inert></i> Step {{anim.step.num}} override</h3>
+      {{#if anim.step.facing}}
+        <button type="button" class="kaa-btn kaa-small" data-action="stepFacing"><i class="fa-solid fa-link" inert></i> Use the animation's facing again</button>
+        {{> "kaa-facing" anim.step.facing}}
+      {{else}}
+        <p class="kaa-hint">Step {{anim.step.num}} uses the animation's facing.</p>
+        <button type="button" class="kaa-btn" data-action="stepFacing"><i class="fa-solid fa-code-branch" inert></i> Give step {{anim.step.num}} its own facing</button>
+      {{/if}}
+    </div>
+    {{else}}
+    <p class="kaa-hint">Select a step in the Path tab to give it its own facing (for example, follow the path on the way out, then face the centre while circling).</p>
+    {{/if}}
+  {{/if}}
+
+  {{!-- ============================ SYMMETRY ============================ --}}
+  {{#if (eq tab "symmetry")}}
+    <div class="kaa-sym">
+      <div class="kaa-card kaa-sym-main">
+        <h3><i class="fa-solid fa-snowflake" inert></i> Symmetry copies</h3>
+        <div class="kaa-sym-count">
+          <span class="kaa-sym-big">×<span class="kaa-sym-n">{{anim.symmetry.count}}</span></span>
+          <input type="range" name="symmetry.count" min="1" max="50" step="1" value="{{anim.symmetry.count}}" data-dtype="Number" data-suffix="">
+        </div>
+        <p class="kaa-hint">
+          {{#if anim.symmetry.on}}
+          Each token playing this animation gets <strong>{{anim.symmetry.copies}}</strong> cop{{#if (eq anim.symmetry.copies 1)}}y{{else}}ies{{/if}} running the same motion, rotated{{#if anim.symmetry.isMirror}} and mirrored{{/if}} around the centre. Drag the slider: the map preview updates live, and tokens already playing gain or lose copies instantly.
+          {{else}}
+          Raise the slider to copy this animation symmetrically around the token (×2 = the opposite side, ×3 = every 120°, … up to ×50).
+          {{/if}}
+        </p>
+        <div class="kaa-seg kaa-seg-wide">
+          {{#each anim.symmetry.modes}}
+          <label class="kaa-seg-btn {{#if active}}active{{/if}}" data-tooltip="{{hint}}"><input type="radio" name="symmetry.mode" value="{{key}}" {{checked active}}><i class="{{icon}}" inert></i> {{label}}</label>
+          {{/each}}
+        </div>
+        {{#if anim.symmetry.isMirror}}
+        <div class="kaa-range">
+          <label data-tooltip="Turns the mirror lines of the kaleidoscope">Mirror angle</label>
+          <input type="range" name="symmetry.axis" min="0" max="180" step="1" value="{{anim.symmetry.axis}}" data-dtype="Number" data-suffix="°">
+          <span class="kaa-range-value">{{anim.symmetry.axis}}°</span>
+        </div>
+        {{/if}}
+        <h4 class="kaa-subhead">Around</h4>
+        <div class="kaa-option-list kaa-option-3">
+          <label class="kaa-option {{#if anim.symmetry.centerOrigin}}active{{/if}}">
+            <input type="radio" name="symmetry.center" value="origin" {{checked anim.symmetry.centerOrigin}}>
+            <div><strong>The token</strong><span>Where each token starts.</span></div>
+          </label>
+          <label class="kaa-option {{#if anim.symmetry.centerPath}}active{{/if}}">
+            <input type="radio" name="symmetry.center" value="path" {{checked anim.symmetry.centerPath}}>
+            <div><strong>The path's centre</strong><span>Copies share the drawn shape (e.g. a ring).</span></div>
+          </label>
+          <label class="kaa-option {{#if anim.symmetry.centerPoint}}active{{/if}}">
+            <input type="radio" name="symmetry.center" value="point" {{checked anim.symmetry.centerPoint}}>
+            <div><strong>A point</strong><span>{{anim.symmetry.pointLabel}}</span></div>
+          </label>
+        </div>
+        {{#if anim.symmetry.centerPoint}}
+        <button type="button" class="kaa-btn" data-action="pick" data-pick="symPoint"><i class="fa-solid fa-crosshairs" inert></i> Pick the centre on the map</button>
+        {{/if}}
+      </div>
+      <div class="kaa-card kaa-sym-preview">
+        <div class="kaa-thumb-wrap kaa-thumb-lg">{{{anim.symmetry.svg}}}</div>
+        <p class="kaa-hint kaa-center">Start of the original in green. Press <i class="fa-solid fa-ghost" inert></i> Preview to watch every copy move on the map.</p>
+      </div>
+    </div>
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-clone" inert></i> The copies</h3>
+      <p class="kaa-hint">Copies are real tokens created when the animation plays, so they can be targeted, damaged and tracked on their own. They follow the same motion, facing and height effects.</p>
+      <div class="kaa-grid">
+        <label>Each copy is
+          <select name="symmetry.link" data-dtype="String">
+            <option value="independent" {{#if (eq anim.symmetry.link "independent")}}selected{{/if}}>Independent (own HP)</option>
+            <option value="linked" {{#if (eq anim.symmetry.link "linked")}}selected{{/if}}>Linked to the actor</option>
+          </select>
+        </label>
+        <label class="kaa-check"><input type="checkbox" name="symmetry.keep" data-dtype="Boolean" {{checked anim.symmetry.keep}}> Keep copies after stopping</label>
+      </div>
+      {{#unless anim.symmetry.canSpawn}}<div class="kaa-warning"><i class="fa-solid fa-triangle-exclamation" inert></i> You don't have permission to create tokens, so copies won't appear when you play.</div>{{/unless}}
+    </div>
+  {{/if}}
+
+  {{!-- ============================ TOKENS ============================ --}}
+  {{#if (eq tab "tokens")}}
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-users" inert></i> Assigned tokens</h3>
+      <div class="kaa-chips">
+        <button type="button" class="kaa-btn" data-action="assignSelected" {{#unless anim.selectedCount}}disabled{{/unless}}><i class="fa-solid fa-user-plus" inert></i> Add selected ({{anim.selectedCount}})</button>
+        <button type="button" class="kaa-btn" data-action="assignSelected" data-replace="true" {{#unless anim.selectedCount}}disabled{{/unless}}><i class="fa-solid fa-user-check" inert></i> Only selected</button>
+        <button type="button" class="kaa-btn {{#if (eq picking "tokens")}}active{{/if}}" data-action="pick" data-pick="tokens"><i class="fa-solid fa-hand-pointer" inert></i> Click tokens on map</button>
+        <button type="button" class="kaa-btn kaa-danger" data-action="clearTokens" {{#unless anim.tokens.length}}disabled{{/unless}}><i class="fa-solid fa-user-xmark" inert></i> Clear</button>
+      </div>
+      {{#if anim.pendingToken}}
+      <div class="kaa-callout">
+        <span><strong>{{anim.pendingToken.name}}</strong> has no animation yet.</span>
+        <button type="button" class="kaa-btn kaa-primary kaa-small" data-action="assignSelected"><i class="fa-solid fa-user-plus" inert></i> Assign to {{anim.name}}</button>
+      </div>
+      {{/if}}
+      {{#unless anim.tokens.length}}
+      <p class="kaa-hint">No tokens assigned. Assign tokens here, or just select tokens on the map and press <strong>Play</strong>. With no tokens assigned, Play uses the selection.</p>
+      {{/unless}}
+      <ul class="kaa-token-list">
+        {{#each anim.tokens}}
+        <li class="kaa-token {{#if playing}}is-playing{{/if}} {{#if missing}}missing{{/if}}" data-token-id="{{id}}">
+          {{#if img}}<img src="{{img}}" alt="">{{else}}<span class="kaa-token-ph"><i class="fa-solid fa-ghost" inert></i></span>{{/if}}
+          <div class="kaa-token-main">
+            <div class="kaa-token-name">{{name}}
+              {{#if lockRotation}}<i class="fa-solid fa-lock kaa-muted" data-tooltip="Rotation locked" inert></i>{{/if}}
+              {{#if other}}<span class="kaa-tag" data-tooltip="Playing another animation">{{other}}</span>{{/if}}
+            </div>
+            <div class="kaa-progress" data-progress-token="{{id}}">
+              <div class="kaa-progress-fill" style="width: {{progress}}%"></div>
+              <span class="kaa-progress-label">{{#if playing}}{{progress}}%{{else}}idle{{/if}}</span>
+            </div>
+          </div>
+          <div class="kaa-token-actions">
+            {{#unless missing}}
+            <button type="button" class="kaa-icon-btn kaa-go" data-action="tokenPlay" data-tooltip="Play on this token" aria-label="Play"><i class="fa-solid fa-play" inert></i></button>
+            <button type="button" class="kaa-icon-btn" data-action="tokenPause" data-tooltip="Pause / resume" aria-label="Pause"><i class="fa-solid fa-pause" inert></i></button>
+            <button type="button" class="kaa-icon-btn" data-action="tokenStop" data-mode="here" data-tooltip="Stop here" aria-label="Stop"><i class="fa-solid fa-stop" inert></i></button>
+            <button type="button" class="kaa-icon-btn" data-action="tokenStop" data-mode="origin" data-tooltip="Stop and return to start" aria-label="Stop and return"><i class="fa-solid fa-rotate-left" inert></i></button>
+            <button type="button" class="kaa-icon-btn" data-action="panToken" data-tooltip="Show on map" aria-label="Show"><i class="fa-solid fa-location-crosshairs" inert></i></button>
+            {{/unless}}
+            <button type="button" class="kaa-icon-btn kaa-danger" data-action="unassign" data-tooltip="Unassign" aria-label="Unassign"><i class="fa-solid fa-xmark" inert></i></button>
+          </div>
+        </li>
+        {{/each}}
+      </ul>
+    </div>
+    <div class="kaa-card">
+      <h3><i class="fa-solid fa-user-lock" inert></i> Who can play it</h3>
+      <select name="access.mode" data-dtype="String">
+        {{#each anim.access.modes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+      </select>
+      {{#if anim.access.chosen}}
+      <div class="kaa-chips">
+        {{#each anim.access.players}}
+        <label class="kaa-check"><input type="checkbox" name="access.user.{{id}}" data-dtype="Boolean" {{checked checked}}> {{name}}</label>
+        {{else}}
+        <span class="kaa-muted">No players in this world yet.</span>
+        {{/each}}
+      </div>
+      {{/if}}
+      <p class="kaa-hint">Players play it from the Token HUD of a token they own (route icon), at whatever they have targeted. The GM can always play everything.</p>
+    </div>
+    <p class="kaa-hint"><i class="fa-solid fa-circle-info" inert></i> The same animation can drive any number of tokens. Use <em>Relative to each token</em> (Motion tab) to make each token run its own copy from where it stands, or <em>Spread evenly</em> to space them out along a loop.</p>
+  {{/if}}
+
+  </div>
+{{/unless}}
+{{/unless}}
+</section>

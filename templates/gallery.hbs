@@ -1,0 +1,60 @@
+<section class="kaa-gallery-root">
+  <aside class="kaa-gallery-side">
+    <div class="kaa-search">
+      <i class="fa-solid fa-magnifying-glass" inert></i>
+      <input type="search" name="search" value="{{search}}" placeholder="Search templates…" autocomplete="off" spellcheck="false">
+    </div>
+    <nav class="kaa-cat-list">
+      {{#each categories}}
+      <button type="button" class="kaa-cat {{#if active}}active{{/if}}" data-action="pickCategory" data-category="{{key}}">
+        <i class="{{icon}}" inert></i><span>{{label}}</span><span class="kaa-count">{{count}}</span>
+      </button>
+      {{/each}}
+    </nav>
+    <div class="kaa-gallery-target {{#if targets}}ready{{/if}}">
+      <i class="fa-solid fa-users" inert></i>
+      {{#if targets}}
+      <span>Apply to <strong>{{targets}}</strong> token{{#unless (eq targets 1)}}s{{/unless}}<br><span class="kaa-muted">{{targetNames}}</span></span>
+      {{else}}
+      <span class="kaa-muted">Select tokens on the map to apply templates in one click.</span>
+      {{/if}}
+    </div>
+    <div class="kaa-gallery-target {{#if aimed}}ready{{/if}}">
+      <i class="fa-solid fa-crosshairs" inert></i>
+      {{#if aimed}}
+      <span>Aimed at <strong>{{aimed}}</strong> target{{#unless (eq aimed 1)}}s{{/unless}}<br><span class="kaa-muted">{{aimedNames}}</span></span>
+      {{else}}
+      <span class="kaa-muted">Attacks fly at the tokens you target (T). Orbits circle the first one.</span>
+      {{/if}}
+    </div>
+  </aside>
+
+  <div class="kaa-gallery-grid">
+    {{#if empty}}
+    <div class="kaa-empty">
+      <i class="fa-solid fa-star" inert></i>
+      <p>No templates here yet.</p>
+      <p class="kaa-muted">Open an animation in the animator and press <i class="fa-solid fa-book-bookmark" inert></i> to save it as your own template.</p>
+    </div>
+    {{/if}}
+    {{#each cards}}
+    <article class="kaa-card-tpl" data-template-id="{{id}}" data-search="{{search}}" {{#if hidden}}hidden{{/if}}>
+      <div class="kaa-thumb-wrap">{{{svg}}}</div>
+      <div class="kaa-tpl-body">
+        <header>
+          <strong>{{name}}</strong>
+          {{#if mine}}<button type="button" class="kaa-icon-btn kaa-danger" data-action="deleteTemplate" data-tooltip="Delete template" aria-label="Delete"><i class="fa-solid fa-trash" inert></i></button>{{/if}}
+        </header>
+        <p>{{description}}</p>
+        <div class="kaa-badges">
+          {{#each badges}}<span class="kaa-badge"><i class="{{icon}}" inert></i> {{label}}</span>{{/each}}
+        </div>
+      </div>
+      <footer>
+        <button type="button" class="kaa-btn kaa-primary kaa-small" data-action="applyTemplate" {{#unless ../targets}}disabled{{/unless}} {{#unless ../canEdit}}disabled{{/unless}} data-tooltip="Add it to the scene, assign the selected tokens and play"><i class="fa-solid fa-play" inert></i> Apply</button>
+        <button type="button" class="kaa-btn kaa-small" data-action="editTemplate" {{#unless ../canEdit}}disabled{{/unless}} data-tooltip="{{#if mine}}Open this template in the editor; save your changes back to it from there{{else}}Open an editable copy in the editor; save it as your own template from there{{/if}}"><i class="fa-solid fa-pen" inert></i> {{#if mine}}Edit{{else}}Customize{{/if}}</button>
+      </footer>
+    </article>
+    {{/each}}
+  </div>
+</section>
